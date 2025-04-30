@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Game love Story</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: black;
+        }
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        .touch-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+            border-radius: 8px;
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            line-height: 60px;
+            user-select: none;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+</head>
+<body>
+<audio id="bgm" autoplay loop>
+    <source src="https://dl.sndup.net/8xcm/youll-be-in-my-heart.mp3" type="audio/mpeg">
+</audio>
+<div id="gameContainer"></div>
+<div class="touch-controls">
+    <div class="btn" id="left">←</div>
+    <div class="btn" id="up">↑</div>
+    <div class="btn" id="down">↓</div>
+    <div class="btn" id="right">→</div>
+</div>
+
+<script>
+    const config = {
+        type: Phaser.AUTO,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        parent: 'gameContainer',
+        physics: {
+            default: 'arcade',
+            arcade: { debug: false }
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+    let player, mchtra, cursors, touchControls = {}, dialogBox, dialogText, cutsceneDone = false;
+    let sparkleParticles;
+
+    const game = new Phaser.Game(config);
+
+    function preload() {
+        this.load.image('bg', 'https://i.ibb.co/qF4pqgx/skatepark-bg.png');
+        this.load.image('dinda', 'https://i.ibb.co/J5FpmGC/char-female.png');
+        this.load.image('mchtra', 'https://i.ibb.co/3mxFRNC/char-male.png');
+        this.load.image('spark', 'https://labs.phaser.io/assets/particles/yellow.png');
+    }
+
+    function create() {
+        this.add.image(config.width / 2, config.height / 2, 'bg').setDisplaySize(config.width, config.height);
+
+        player = this.physics.add.sprite(100, config.height - 150, 'dinda').setScale(1.5).setDepth(1);
+        mchtra = this.physics.add.sprite(config.width / 2, config.height / 2, 'mchtra').setScale(1.5);
+        mchtra.setVelocityX(100);
+        mchtra.setCollideWorldBounds(true);
+        mchtra.setBounce(1);
+
+        cursors = this.input.keyboard.createCursorKeys();
+
+        this.physics.add.overlap(player, mchtra, triggerEffect, null, this);
+
+        dialogBox = this.add.rectangle(config.width / 2, config.height - 80, config.width * 0.9, 100, 0x000000, 0.7).setVisible(false);
+        dialogText = this.add.text(40, config.height - 110, '', { fontSize: '18px', fill: '#fff', wordWrap: { width: config.width - 80 } }).setVisible(false);
+
+        sparkleParticles = this.add.particles('spark');
+    }
+
+    function triggerEffect() {
+        if (cutsceneDone) return;
+        cutsceneDone = true;
+        mchtra.setVelocity(0);
+
+        sparkleParticles.createEmitter({
+            x: mchtra.x,
+            y: mchtra.y,
+            speed: { min: -100, max: 100 },
+            angle: { min: 0, max: 360 },
+            lifespan: 1000,
+            quantity: 20,
+            scale: { start: 0.5, end: 0 },
+            on: false
+        }).explode(50, mchtra.x, mchtra.y);
+
+        dialogBox.setVisible(true);
+        dialogText.setText("Mchtra: Dinda... sejak pertama kali aku melihatmu, hatiku ikut meluncur seperti skateku...");
+        dialogText.setVisible(true);
+    }
+
+    function update() {
+        if (!cutsceneDone) return;
+
+        player.setVelocity(0);
+        if (cursors.left.isDown || touchControls.left) player.setVelocityX(-150);
+        else if (cursors.right.isDown || touchControls.right) player.setVelocityX(150);
+        if (cursors.up.isDown || touchControls.up) player.setVelocityY(-150);
+        else if (cursors.down.isDown || touchControls.down) player.setVelocityY(150);
+    }
+
+    document.getElementById('left').addEventListener('touchstart', () => touchControls.left = true);
+    document.getElementById('left').addEventListener('touchend', () => touchControls.left = false);
+    document.getElementById('right').addEventListener('touchstart', () => touchControls.right = true);
+    document.getElementById('right').addEventListener('touchend', () => touchControls.right = false);
+    document.getElementById('up').addEventListener('touchstart', () => touchControls.up = true);
+    document.getElementById('up').addEventListener('touchend', () => touchControls.up = false);
+    document.getElementById('down').addEventListener('touchstart', () => touchControls.down = true);
+    document.getElementById('down').addEventListener('touchend', () => touchControls.down = false);
+</script>
+</body>
+</html>
